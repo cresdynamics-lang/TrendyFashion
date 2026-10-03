@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /cart
+Disallow: /wishlist
+Disallow: /search
+Disallow: /api/
+
+Sitemap: https://trendyfashionzone.co.ke/sitemap.xml
