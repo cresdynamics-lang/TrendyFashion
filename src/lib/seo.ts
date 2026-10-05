@@ -23,7 +23,9 @@ export function categoryMeta(opts: {
 export function productMeta(product: Product, colourLabel?: string) {
   const sizes = product.sizes;
   const sizeRange =
-    sizes.length > 1 ? `${sizes[0]}–${sizes[sizes.length - 1]}` : sizes[0] ?? "";
+    sizes.length > 1
+      ? `${sizes[0]}-${sizes[sizes.length - 1]}`
+      : (sizes[0] ?? "");
   const isClothing = product.category[0] === "clothing";
   const title = colourLabel
     ? isClothing
@@ -41,13 +43,50 @@ export function productMeta(product: Product, colourLabel?: string) {
 }
 
 export function productJsonLd(product: Product, colourSlug?: string) {
-  const colour = product.colours.find((c) => c.slug === colourSlug) ?? product.colours[0];
+  const colour =
+    product.colours.find((c) => c.slug === colourSlug) ?? product.colours[0];
+  const abs = (path: string) =>
+    path.startsWith("http")
+      ? path
+      : `https://${SITE.domain}${path.startsWith("/") ? "" : "/catalog/"}${path}`;
+
+  const variantOffers = product.colours.map((c) => ({
+    "@type": "Product",
+    name: `${product.name}, ${c.label}`,
+    sku: `${product.slug}-${c.slug}`,
+    image: [abs(c.image)],
+    color: c.label,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "KES",
+      price: product.priceKes,
+      availability: "https://schema.org/InStock",
+      url: `https://${SITE.domain}/p/${product.slug}/${c.slug}`,
+    },
+  }));
+
+  if (product.colours.length > 1) {
+    return {
+      "@context": "https://schema.org",
+      "@type": "ProductGroup",
+      name: product.name,
+      productGroupID: product.slug,
+      variesBy: ["https://schema.org/color"],
+      brand: product.brand
+        ? { "@type": "Brand", name: product.brand }
+        : undefined,
+      hasVariant: variantOffers,
+    };
+  }
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
     name: `${product.name}${colour ? `, ${colour.label}` : ""}`,
-    image: [`https://${SITE.domain}/catalog/${colour.image}`],
-    brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+    image: [abs(colour.image)],
+    brand: product.brand
+      ? { "@type": "Brand", name: product.brand }
+      : undefined,
     offers: {
       "@type": "Offer",
       priceCurrency: "KES",

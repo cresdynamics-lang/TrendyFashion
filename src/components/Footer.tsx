@@ -26,19 +26,41 @@ export function Footer() {
 
         <div className="mt-10 grid grid-cols-3 gap-4 sm:gap-8">
           <div>
-            <p className="font-display text-xs font-bold uppercase tracking-wider sm:text-sm">Shop</p>
+            <p className="font-display text-xs font-bold uppercase tracking-wider sm:text-sm">
+              Shop
+            </p>
             <ul className="mt-3 space-y-2 text-xs text-white/75 sm:text-sm">
               <li>
-                <Link href="/shoes">Shoes</Link>
+                <Link href="/shoes/officials">Officials</Link>
+              </li>
+              <li>
+                <Link href="/shoes/casuals">Casuals</Link>
+              </li>
+              <li>
+                <Link href="/shoes/sandals-slides">Sandals</Link>
               </li>
               <li>
                 <Link href="/sneakers">Sneakers</Link>
               </li>
               <li>
-                <Link href="/clothing">Clothing</Link>
+                <Link href="/clothing/tops/shirts">Men&apos;s shirts</Link>
               </li>
               <li>
-                <Link href="/new-in">New In</Link>
+                <Link href="/clothing/bottoms/trousers">
+                  Men&apos;s trousers
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop">Shop all</Link>
+              </li>
+              <li>
+                <Link href="/shop/officials">Shop · Officials</Link>
+              </li>
+              <li>
+                <Link href="/shop/casuals">Shop · Casuals</Link>
+              </li>
+              <li>
+                <Link href="/shop/other">Shop · Other</Link>
               </li>
               <li>
                 <Link href="/sale">Sale</Link>
@@ -46,7 +68,9 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="font-display text-xs font-bold uppercase tracking-wider sm:text-sm">Help</p>
+            <p className="font-display text-xs font-bold uppercase tracking-wider sm:text-sm">
+              Help
+            </p>
             <ul className="mt-3 space-y-2 text-xs text-white/75 sm:text-sm">
               <li>
                 <Link href="/delivery">Delivery</Link>
@@ -66,7 +90,9 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="font-display text-xs font-bold uppercase tracking-wider sm:text-sm">Company</p>
+            <p className="font-display text-xs font-bold uppercase tracking-wider sm:text-sm">
+              Company
+            </p>
             <ul className="mt-3 space-y-2 text-xs text-white/75 sm:text-sm">
               <li>
                 <Link href="/about">About</Link>

@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 type WishlistContextValue = {
   slugs: string[];
@@ -34,13 +41,21 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     () => ({
       slugs,
       toggle: (slug: string) =>
-        setSlugs((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug])),
+        setSlugs((prev) =>
+          prev.includes(slug)
+            ? prev.filter((s) => s !== slug)
+            : [...prev, slug],
+        ),
       has: (slug: string) => slugs.includes(slug),
     }),
     [slugs],
   );
 
-  return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
+  return (
+    <WishlistContext.Provider value={value}>
+      {children}
+    </WishlistContext.Provider>
+  );
 }
 
 export function useWishlist() {

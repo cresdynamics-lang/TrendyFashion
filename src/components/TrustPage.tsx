@@ -17,7 +17,9 @@ export function TrustPage({
         </p>
         <h1 className="heading mt-3 text-4xl">{title}</h1>
         <p className="mt-4 text-lg text-slate-600">{intro}</p>
-        <div className="prose-tfz mt-8 space-y-4 text-slate-700">{children}</div>
+        <div className="prose-tfz mt-8 space-y-4 text-slate-700">
+          {children}
+        </div>
       </div>
     </section>
   );

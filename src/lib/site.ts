@@ -6,7 +6,7 @@ export const SITE = {
   whatsappE164: "254790314739",
   address: "Moi Avenue, Nairobi CBD",
   deliveryPromise: "Free delivery in Nairobi",
-  hours: "Mon–Sat 9:00–19:00 · Sun 10:00–17:00",
+  hours: "Mon-Sat 9:00-19:00 · Sun 10:00-17:00",
   mapsUrl: "https://maps.google.com/?q=Moi+Avenue+Nairobi+CBD",
 } as const;
 
@@ -25,119 +25,130 @@ export type MegaMenu = {
   feature?: { title: string; href: string; image: string };
 };
 
+/**
+ * Top-nav big categories - each opens a short dropdown of subcategories.
+ * Goal: at most two clicks to a product (nav → subcategory → product).
+ */
 export const MEGA_MENUS: MegaMenu[] = [
   {
-    label: "Shoes",
-    href: "/shoes",
+    label: "Officials",
+    href: "/shoes/officials",
     columns: [
       {
-        title: "Officials",
+        title: "Official shoes",
         href: "/shoes/officials",
         links: [
-          { label: "Monk straps & buckles", href: "/shoes/officials/monk-straps" },
-          { label: "Loafers & slip-ons", href: "/shoes/officials/loafers" },
+          { label: "All official shoes", href: "/shoes/officials" },
+          { label: "Monk straps", href: "/shoes/officials/monk-straps" },
+          { label: "Loafers", href: "/shoes/officials/loafers" },
+          { label: "Oxford & derby", href: "/shoes/officials/oxford-derby" },
           { label: "Official boots", href: "/shoes/officials/official-boots" },
-          { label: "View all officials →", href: "/shoes/officials" },
-        ],
-      },
-      {
-        title: "Casuals",
-        href: "/shoes/casuals",
-        links: [
-          { label: "Casual loafers", href: "/shoes/casuals/casual-loafers" },
-          { label: "Lace-up casuals", href: "/shoes/casuals/lace-up-casuals" },
-          { label: "Chunky-sole casuals", href: "/shoes/casuals/chunky-sole-casuals" },
-          { label: "Casual boots", href: "/shoes/casuals/casual-boots" },
-        ],
-      },
-      {
-        title: "Sandals & Slides",
-        href: "/shoes/sandals-slides",
-        links: [
-          { label: "Buckle slides", href: "/shoes/sandals-slides/buckle-slides" },
-          { label: "Slides", href: "/shoes/sandals-slides" },
+          { label: "Empire", href: "/shoes/officials?brand=Empire" },
+          { label: "Clarks", href: "/shoes/officials?brand=Clarks" },
         ],
       },
     ],
-    feature: {
-      title: "New: double monk straps",
-      href: "/p/double-monk-strap/burgundy",
-      image: "/catalog/shoes/officials/double-monk-strap/burgundy.jpeg",
-    },
+  },
+  {
+    label: "Casuals",
+    href: "/shoes/casuals",
+    columns: [
+      {
+        title: "Casual shoes",
+        href: "/shoes/casuals",
+        links: [
+          { label: "All casual shoes", href: "/shoes/casuals" },
+          { label: "Casual loafers", href: "/shoes/casuals/casual-loafers" },
+          { label: "Lace-ups", href: "/shoes/casuals/lace-up-casuals" },
+          { label: "Casual boots", href: "/shoes/casuals/casual-boots" },
+          { label: "Timberland", href: "/shoes/casuals?brand=Timberland" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Sandals",
+    href: "/shoes/sandals-slides",
+    columns: [
+      {
+        title: "Sandals & slides",
+        href: "/shoes/sandals-slides",
+        links: [
+          { label: "All sandals", href: "/shoes/sandals-slides" },
+          {
+            label: "Buckle slides",
+            href: "/shoes/sandals-slides/buckle-slides",
+          },
+          { label: "Clogs & mules", href: "/shoes/sandals-slides/clogs-mules" },
+        ],
+      },
+    ],
   },
   {
     label: "Sneakers",
     href: "/sneakers",
     columns: [
       {
-        title: "By model",
+        title: "Shop sneakers",
         href: "/sneakers",
         links: [
-          { label: "Nike SB Dunk / Dunk Low", href: "/sneakers/dunk-low" },
-          { label: "Air Force 1", href: "/sneakers/air-force-1" },
-          { label: "Air Max", href: "/sneakers/air-max" },
-          { label: "Adidas Samba", href: "/sneakers/samba" },
-          { label: "Cloud runner", href: "/sneakers/cloud-runner" },
-        ],
-      },
-      {
-        title: "By brand",
-        href: "/sneakers",
-        links: [
+          { label: "All sneakers", href: "/sneakers" },
+          { label: "New Balance", href: "/sneakers/shop-by-model/new-balance" },
+          { label: "Dunk Low", href: "/sneakers/shop-by-model/dunk-low" },
+          { label: "Air Force 1", href: "/sneakers/shop-by-model/air-force-1" },
+          { label: "Air Max", href: "/sneakers/shop-by-model/air-max" },
+          { label: "Samba", href: "/sneakers/shop-by-model/samba" },
+          { label: "Jordan", href: "/sneakers/shop-by-model/jordan" },
           { label: "Nike", href: "/sneakers?brand=Nike" },
           { label: "Adidas", href: "/sneakers?brand=Adidas" },
-          { label: "On", href: "/sneakers?brand=On" },
-        ],
-      },
-      {
-        title: "More",
-        href: "/sneakers",
-        links: [
-          { label: "Running & Training", href: "/sneakers/running-training" },
-          { label: "Under KES 3,500", href: "/sneakers?max=3500" },
         ],
       },
     ],
-    feature: {
-      title: "Samba, chocolate",
-      href: "/p/samba/chocolate",
-      image: "/catalog/sneakers/samba/chocolate.jpeg",
-    },
+  },
+  {
+    label: "Shop",
+    href: "/shop",
+    columns: [
+      {
+        title: "Browse all",
+        href: "/shop",
+        links: [
+          { label: "All products", href: "/shop" },
+          { label: "Officials", href: "/shop/officials" },
+          { label: "Casuals", href: "/shop/casuals" },
+          { label: "Other (sneakers & more)", href: "/shop/other" },
+          { label: "Sale by price", href: "/sale", badge: "EASY" },
+        ],
+      },
+    ],
   },
   {
     label: "Clothing",
     href: "/clothing",
     columns: [
       {
-        title: "Tops",
-        href: "/clothing/tops",
+        title: "Men's shirts",
+        href: "/clothing/tops/shirts",
         links: [
-          { label: "T-shirts", href: "/clothing/tops/t-shirts" },
-          { label: "Polos", href: "/clothing/tops/polos" },
-          { label: "Short-sleeve shirts", href: "/clothing/tops/short-sleeve-shirts" },
-          { label: "Long-sleeve shirts", href: "/clothing/tops/long-sleeve-shirts", badge: "NEW" },
+          { label: "All shirts", href: "/clothing/tops/shirts" },
+          {
+            label: "Long-sleeve shirts",
+            href: "/clothing/tops/long-sleeve-shirts",
+            badge: "NEW",
+          },
           { label: "Official shirts", href: "/clothing/tops/official-shirts" },
-          { label: "Hoodies & sweaters", href: "/clothing/tops/hoodies" },
-          { label: "Vests", href: "/clothing/tops/vests" },
+          { label: "Polos", href: "/clothing/tops/polos" },
+          { label: "T-shirts", href: "/clothing/tops/t-shirts" },
+          { label: "Hoodies", href: "/clothing/tops/hoodies" },
         ],
       },
       {
-        title: "Bottoms",
-        href: "/clothing/bottoms",
+        title: "Men's trousers",
+        href: "/clothing/bottoms/trousers",
         links: [
           { label: "Trousers", href: "/clothing/bottoms/trousers" },
-          { label: "Khakis", href: "/clothing/bottoms/khakis" },
-          { label: "Linen shorts", href: "/clothing/bottoms/linen-shorts" },
           { label: "Casual shorts", href: "/clothing/bottoms/casual-shorts" },
-        ],
-      },
-      {
-        title: "More",
-        href: "/clothing",
-        links: [
-          { label: "Jerseys", href: "/clothing/jerseys" },
-          { label: "Unisex edit", href: "/clothing/unisex" },
-          { label: "Complete the look", href: "/#complete-the-look" },
+          { label: "All bottoms", href: "/clothing/bottoms" },
         ],
       },
     ],
@@ -147,7 +158,7 @@ export const MEGA_MENUS: MegaMenu[] = [
 export const PROMISES = [
   { title: "Free delivery in Nairobi", body: "Delivered to your door" },
   { title: "Pay your way", body: "M-Pesa · pay on delivery · WhatsApp order" },
-  { title: "Wrong size?", body: "Exchange — start in one message" },
+  { title: "Wrong size?", body: "Exchange - start in one message" },
   { title: "Talk to us", body: "0790314739 on WhatsApp" },
 ] as const;
 
@@ -179,19 +190,29 @@ export const HOME_CATEGORY_TILES = [
     image: "/catalog/shoes/officials/clarks-penny-loafer/black-01.jpg",
   },
   {
+    title: "Casuals",
+    href: "/shoes/casuals",
+    image: "/catalog/shoes/casuals/suede-penny-loafer/brown.jpg",
+  },
+  {
+    title: "Sandals",
+    href: "/shoes/sandals-slides",
+    image: "/catalog/shoes/sandals-slides/buckle-slide/black.jpeg",
+  },
+  {
     title: "Sneakers",
     href: "/sneakers",
     image: "/catalog/sneakers/dunk-low/olive-blue.jpeg",
   },
   {
-    title: "Sandals & Slides",
-    href: "/shoes/sandals-slides",
-    image: "/catalog/shoes/sandals-slides/buckle-slide/black.jpeg",
+    title: "Men's shirts",
+    href: "/clothing/tops/shirts",
+    image: "/catalog/clothing/tops/raglan-oversized-tee/brown.jpeg",
   },
   {
-    title: "Clothing",
-    href: "/clothing",
-    image: "/catalog/clothing/tops/raglan-oversized-tee/brown.jpeg",
+    title: "Men's trousers",
+    href: "/clothing/bottoms/trousers",
+    image: "/catalog/clothing/bottoms/textured-trousers/charcoal.jpeg",
   },
 ] as const;
 
@@ -242,7 +263,7 @@ export const LOOK_BUNDLE = {
 export const HOME_FAQS = [
   {
     q: "Do you deliver outside Nairobi?",
-    a: "Yes — ask on WhatsApp for countrywide fees and timing. Nairobi delivery is free.",
+    a: "Yes - ask on WhatsApp for countrywide fees and timing. Nairobi delivery is free.",
   },
   {
     q: "Can I exchange a size?",
@@ -254,7 +275,7 @@ export const HOME_FAQS = [
   },
   {
     q: "Can I come and try them on?",
-    a: `Yes — visit us on ${SITE.address}. Hours: ${SITE.hours}.`,
+    a: `Yes - visit us on ${SITE.address}. Hours: ${SITE.hours}.`,
   },
 ] as const;
 
@@ -270,7 +291,7 @@ export const PLACEHOLDER_REVIEWS = [
     name: "Brian M.",
     product: "Dunk Low · Olive blue · 42",
     date: "Aug 2026",
-    text: "Colour matched the page. Size was true — I wear 42 in Nike.",
+    text: "Colour matched the page. Size was true - I wear 42 in Nike.",
     stars: 5,
   },
   {

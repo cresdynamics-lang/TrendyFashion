@@ -2,16 +2,19 @@ import { TrustPage } from "@/components/TrustPage";
 
 export const metadata = {
   title: "Size guide | Shoes, shirts, trousers",
-  description: "EU shoe sizes, clothing charts, and how to measure. Ask on WhatsApp with a photo of your old label.",
+  description:
+    "EU shoe sizes, clothing charts, and how to measure. Ask on WhatsApp with a photo of your old label.",
 };
 
 export default function SizeGuidePage() {
   return (
     <TrustPage
       title="Size guide"
-      intro="Shoes, shirts and trousers — with a one-tap ask if you are still unsure."
+      intro="Shoes, shirts and trousers - with a one-tap ask if you are still unsure."
     >
-      <h2 className="font-display text-xl font-bold text-navy">Shoe size helper (EU)</h2>
+      <h2 className="font-display text-xl font-bold text-navy">
+        Shoe size helper (EU)
+      </h2>
       <div className="overflow-x-auto">
         <table className="mt-3 w-full border-collapse text-sm">
           <thead>
@@ -44,9 +47,13 @@ export default function SizeGuidePage() {
           </tbody>
         </table>
       </div>
-      <p className="text-sm text-muted">Illustrative conversions. We fill foot-length from our own lasts.</p>
+      <p className="text-sm text-muted">
+        Illustrative conversions. We fill foot-length from our own lasts.
+      </p>
 
-      <h2 className="font-display mt-10 text-xl font-bold text-navy">Clothing (tops)</h2>
+      <h2 className="font-display mt-10 text-xl font-bold text-navy">
+        Clothing (tops)
+      </h2>
       <div className="overflow-x-auto">
         <table className="mt-3 w-full border-collapse text-sm">
           <thead>
@@ -70,8 +77,8 @@ export default function SizeGuidePage() {
         </table>
       </div>
       <p className="mt-4 text-sm text-slate-600">
-        Trousers use waist and inseam (tags often show 30–36). Long-sleeve items gain a sleeve-length column once
-        measured.
+        Trousers use waist and inseam (tags often show 30-36). Long-sleeve items
+        gain a sleeve-length column once measured.
       </p>
     </TrustPage>
   );

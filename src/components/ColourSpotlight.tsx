@@ -11,7 +11,11 @@ import {
   sizeSummary,
 } from "@/lib/products";
 
-export function ColourSpotlight({ slug = "nike-sb-dunk-low" }: { slug?: string }) {
+export function ColourSpotlight({
+  slug = "nike-sb-dunk-low",
+}: {
+  slug?: string;
+}) {
   const product =
     getProduct(slug) ??
     getProduct("nike-dunk-low") ??
@@ -48,18 +52,26 @@ export function ColourSpotlight({ slug = "nike-sb-dunk-low" }: { slug?: string }
                 type="button"
                 onClick={() => setActive(i)}
                 className={`h-10 w-10 rounded-full border-2 ${
-                  i === active ? "border-yellow ring-2 ring-navy" : "border-black/15"
+                  i === active
+                    ? "border-yellow ring-2 ring-navy"
+                    : "border-black/15"
                 }`}
-                style={{ backgroundColor: colourHex(c.slug) }}
+                style={{ backgroundColor: colourHex(c.label || c.slug) }}
                 aria-label={c.label}
+                title={c.label}
               />
             ))}
           </div>
           <p className="mt-4 font-display text-lg font-semibold text-navy">
-            {colour.label} · {formatKes(product.priceKes)}
+            {formatKes(product.priceKes)}
           </p>
-          <p className="mt-1 text-sm text-slate-600">Sizes {sizeSummary(product.sizes)}</p>
-          <Link href={`/p/${product.slug}/${colour.slug}`} className="btn btn-yellow mt-6">
+          <p className="mt-1 text-sm text-slate-600">
+            Sizes {sizeSummary(product.sizes)}
+          </p>
+          <Link
+            href={`/p/${product.slug}/${colour.slug}`}
+            className="btn btn-yellow mt-6"
+          >
             See sizes
           </Link>
         </div>

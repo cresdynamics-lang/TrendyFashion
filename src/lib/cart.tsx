@@ -75,10 +75,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       },
       updateQty: (key, qty) => {
         setItems((prev) =>
-          qty <= 0 ? prev.filter((p) => p.key !== key) : prev.map((p) => (p.key === key ? { ...p, qty } : p)),
+          qty <= 0
+            ? prev.filter((p) => p.key !== key)
+            : prev.map((p) => (p.key === key ? { ...p, qty } : p)),
         );
       },
-      removeItem: (key) => setItems((prev) => prev.filter((p) => p.key !== key)),
+      removeItem: (key) =>
+        setItems((prev) => prev.filter((p) => p.key !== key)),
       clear: () => setItems([]),
     };
   }, [items]);

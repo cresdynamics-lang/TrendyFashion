@@ -2,23 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IconCart, IconHeart, IconMenu, IconSearch } from "@/components/Icons";
+import { LiveSearch } from "@/components/LiveSearch";
 import { useCart } from "@/lib/cart";
 import { MEGA_MENUS, SITE } from "@/lib/site";
 import { whatsappHref } from "@/lib/whatsapp";
 
 export function Header() {
   const { count } = useCart();
-  const router = useRouter();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [compact, setCompact] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const onScroll = () => setCompact(window.scrollY > 24);
@@ -28,15 +26,11 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = drawer ? "hidden" : "";
+    document.body.style.overflow = drawer || searchOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [drawer]);
-
-  useEffect(() => {
-    if (searchOpen) searchInputRef.current?.focus();
-  }, [searchOpen]);
+  }, [drawer, searchOpen]);
 
   const openDelayed = (label: string) => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -46,13 +40,6 @@ export function Header() {
   const closeDelayed = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     closeTimer.current = setTimeout(() => setOpenMenu(null), 160);
-  };
-
-  const onSearch = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const q = new FormData(e.currentTarget).get("q")?.toString().trim();
-    setSearchOpen(false);
-    router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/new-in");
   };
 
   return (
@@ -78,7 +65,7 @@ export function Header() {
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <Image
               src="/catalog/brand/logo.jpg"
-              alt={SITE.name}
+              alt={`${SITE.name} logo`}
               width={compact ? 40 : 48}
               height={compact ? 40 : 48}
               className="rounded-sm object-cover"
@@ -113,24 +100,33 @@ export function Header() {
                 {openMenu === menu.label && (
                   <div
                     className={`absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 rounded-md border border-black/5 bg-white p-5 shadow-xl ${
-                      menu.feature ? "w-[min(920px,80vw)]" : "w-[min(640px,80vw)]"
+                      menu.columns.length > 1
+                        ? "w-[min(520px,90vw)]"
+                        : "w-[min(280px,90vw)]"
                     }`}
                     onMouseEnter={() => openDelayed(menu.label)}
                     onMouseLeave={closeDelayed}
                   >
-                    <div className={`grid gap-5 ${menu.feature ? "grid-cols-4" : "grid-cols-3"}`}>
+                    <div
+                      className={`grid gap-6 ${
+                        menu.columns.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                      }`}
+                    >
                       {menu.columns.map((col) => (
                         <div key={col.title}>
                           <Link
                             href={col.href}
-                            className="font-display text-xs font-bold uppercase tracking-wider text-navy"
+                            className="font-display text-xs font-bold uppercase tracking-wider text-navy hover:underline"
                           >
                             {col.title}
                           </Link>
                           <ul className="mt-3 space-y-2">
                             {col.links.map((link) => (
                               <li key={link.href + link.label}>
-                                <Link href={link.href} className="text-sm text-slate-600 hover:text-navy">
+                                <Link
+                                  href={link.href}
+                                  className="block text-sm text-slate-600 hover:text-navy"
+                                >
                                   {link.label}
                                   {link.badge ? (
                                     <span className="ml-1 rounded-sm bg-yellow px-1.5 py-0.5 text-[10px] font-bold text-navy">
@@ -143,32 +139,27 @@ export function Header() {
                           </ul>
                         </div>
                       ))}
-                      {menu.feature && (
-                        <Link href={menu.feature.href} className="group overflow-hidden rounded-md bg-mist">
-                          <div className="relative aspect-[4/3] overflow-hidden">
-                            <Image
-                              src={menu.feature.image}
-                              alt={menu.feature.title}
-                              fill
-                              className="object-cover transition duration-500 group-hover:scale-105"
-                              sizes="220px"
-                            />
-                          </div>
-                          <div className="p-3">
-                            <p className="font-display text-sm font-semibold text-navy">{menu.feature.title}</p>
-                            <p className="mt-1 text-xs font-semibold text-navy/70">Shop now →</p>
-                          </div>
-                        </Link>
-                      )}
                     </div>
                   </div>
                 )}
               </div>
             ))}
-            <Link href="/new-in" className="font-display px-3 py-2 text-sm font-semibold text-navy">
+            <Link
+              href="/new-in"
+              className="font-display px-3 py-2 text-sm font-semibold text-navy"
+            >
               New In
             </Link>
-            <Link href="/sale" className="font-display px-3 py-2 text-sm font-bold text-yellow">
+            <Link
+              href="/journal"
+              className="font-display px-3 py-2 text-sm font-semibold text-navy"
+            >
+              Journal
+            </Link>
+            <Link
+              href="/sale"
+              className="font-display px-3 py-2 text-sm font-bold text-yellow"
+            >
               Sale
             </Link>
           </nav>
@@ -214,23 +205,13 @@ export function Header() {
       </div>
 
       {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-deep-navy/40 p-4 backdrop-blur-sm" onClick={() => setSearchOpen(false)}>
-          <form
-            onSubmit={onSearch}
-            className="container mt-20 flex items-center gap-2 rounded-md bg-white p-3 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <IconSearch className="h-5 w-5 shrink-0 text-navy" />
-            <input
-              ref={searchInputRef}
-              name="q"
-              placeholder="Search shoes, polos, Dunk…"
-              className="min-h-11 w-full bg-transparent text-base outline-none"
-            />
-            <button type="submit" className="btn btn-yellow px-4">
-              Search
-            </button>
-          </form>
+        <div
+          className="fixed inset-0 z-50 bg-deep-navy/40 p-4 backdrop-blur-sm"
+          onClick={() => setSearchOpen(false)}
+        >
+          <div className="container mt-16" onClick={(e) => e.stopPropagation()}>
+            <LiveSearch onClose={() => setSearchOpen(false)} />
+          </div>
         </div>
       )}
 
@@ -244,8 +225,14 @@ export function Header() {
           />
           <aside className="absolute inset-y-0 right-0 flex w-[min(100%,360px)] flex-col bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-black/5 px-4 py-4">
-              <p className="font-display text-sm font-bold text-navy">TRENDY FASHION ZONE</p>
-              <button type="button" className="inline-flex h-11 w-11 items-center justify-center text-2xl" onClick={() => setDrawer(false)}>
+              <p className="font-display text-sm font-bold text-navy">
+                TRENDY FASHION ZONE
+              </p>
+              <button
+                type="button"
+                className="inline-flex h-11 w-11 items-center justify-center text-2xl"
+                onClick={() => setDrawer(false)}
+              >
                 ×
               </button>
             </div>
@@ -264,6 +251,13 @@ export function Header() {
                     </button>
                     {isOpen && (
                       <div className="space-y-3 px-3 pb-4">
+                        <Link
+                          href={menu.href}
+                          className="block min-h-10 text-sm font-semibold text-navy underline"
+                          onClick={() => setDrawer(false)}
+                        >
+                          Shop all {menu.label}
+                        </Link>
                         {menu.columns.map((col) => (
                           <div key={col.title}>
                             <Link
@@ -294,22 +288,47 @@ export function Header() {
                   </div>
                 );
               })}
-              <Link href="/new-in" className="flex min-h-12 items-center px-3 font-display text-base font-semibold" onClick={() => setDrawer(false)}>
+              <Link
+                href="/shop"
+                className="flex min-h-12 items-center px-3 font-display text-base font-semibold"
+                onClick={() => setDrawer(false)}
+              >
+                Shop (all)
+              </Link>
+              <Link
+                href="/new-in"
+                className="flex min-h-12 items-center px-3 font-display text-base font-semibold"
+                onClick={() => setDrawer(false)}
+              >
                 New In
               </Link>
-              <Link href="/sale" className="flex min-h-12 items-center px-3 font-display text-base font-bold text-yellow" onClick={() => setDrawer(false)}>
+              <Link
+                href="/sale"
+                className="flex min-h-12 items-center px-3 font-display text-base font-bold text-yellow"
+                onClick={() => setDrawer(false)}
+              >
                 Sale
               </Link>
-              <Link href="/journal" className="flex min-h-12 items-center px-3 font-display text-base font-semibold" onClick={() => setDrawer(false)}>
+              <Link
+                href="/journal"
+                className="flex min-h-12 items-center px-3 font-display text-base font-semibold"
+                onClick={() => setDrawer(false)}
+              >
                 Journal
               </Link>
             </nav>
             <div className="space-y-2 border-t border-black/5 p-4 text-sm text-slate-600">
-              <Link href="/delivery" onClick={() => setDrawer(false)}>Delivery</Link>
+              <Link href="/delivery" onClick={() => setDrawer(false)}>
+                Delivery
+              </Link>
               {" · "}
-              <Link href="/visit" onClick={() => setDrawer(false)}>Visit</Link>
+              <Link href="/visit" onClick={() => setDrawer(false)}>
+                Visit
+              </Link>
               {" · "}
-              <Link href="/contact" onClick={() => setDrawer(false)}>Contact</Link>
+              <Link href="/contact" onClick={() => setDrawer(false)}>
+                Contact
+              </Link>
               <a
                 className="btn btn-yellow mt-3 w-full"
                 href={whatsappHref(`Hi, I'd like to chat with ${SITE.name}.`)}

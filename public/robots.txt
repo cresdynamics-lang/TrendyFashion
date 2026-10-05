@@ -1,8 +1,17 @@
 User-agent: *
 Allow: /
+Allow: /p/
+Allow: /shoes/
+Allow: /sneakers/
+Allow: /clothing/
+Allow: /journal/
+Allow: /new-in
+Allow: /shop/
+Allow: /sale
 Disallow: /cart
 Disallow: /wishlist
 Disallow: /search
 Disallow: /api/
+Disallow: /admin
 
 Sitemap: https://trendyfashionzone.co.ke/sitemap.xml

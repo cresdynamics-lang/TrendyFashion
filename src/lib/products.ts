@@ -1,73 +1,18 @@
 import catalog from "../../catalog/products.json";
+import type { Catalog, Product } from "@/lib/product-utils";
 
-export type Colour = {
-  slug: string;
-  label: string;
-  image: string;
-  gallery?: string[];
-};
-
-export type Product = {
-  slug: string;
-  name: string;
-  category: string[];
-  brand?: string;
-  sizes: string[];
-  colours: Colour[];
-  priceKes: number;
-  badge?: string | null;
-};
-
-export type Catalog = {
-  shop: string;
-  whatsapp: string;
-  whatsapp_e164: string;
-  products: Product[];
-};
+export type { Colour, Product, Catalog } from "@/lib/product-utils";
+export {
+  colourHex,
+  formatKes,
+  imageSrc,
+  sizeSummary,
+  sizesForColour,
+  slimForCard,
+  slimForCards,
+} from "@/lib/product-utils";
 
 const data = catalog as Catalog;
-
-const COLOUR_HEX: Record<string, string> = {
-  grey: "#9CA3AF",
-  brown: "#6B3F2A",
-  black: "#111111",
-  sand: "#C2B280",
-  cream: "#F5F0E6",
-  olive: "#556B2F",
-  camel: "#C19A6B",
-  teal: "#2A5A56",
-  white: "#F3F4F6",
-  charcoal: "#36454F",
-  navy: "#0A1F44",
-  "pink-grey": "#D8A7B1",
-  pink: "#F4C2C2",
-  "olive-blue": "#6B7F5A",
-  "black-purple": "#4C1D95",
-  chocolate: "#3D2B1F",
-  "white-black": "#E5E7EB",
-  burgundy: "#6B1E2F",
-  "navy-orange": "#1E3A5F",
-  tan: "#D2A679",
-  "navy-alt": "#1B3A5C",
-  mustard: "#D4A017",
-  sage: "#8A9A7B",
-};
-
-export function colourHex(slug: string) {
-  return COLOUR_HEX[slug] ?? "#6B7280";
-}
-
-export function imageSrc(path: string) {
-  if (!path) return "/catalog/brand/logo.jpg";
-  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("/")) {
-    return path;
-  }
-  return `/catalog/${path}`;
-}
-
-export function formatKes(amount: number) {
-  return `KES ${amount.toLocaleString("en-KE")}`;
-}
 
 export function getAllProducts(): Product[] {
   return data.products;
@@ -79,25 +24,28 @@ export function getProduct(slug: string) {
 
 export function getColour(product: Product, colourSlug?: string) {
   if (!colourSlug) return product.colours[0];
-  return product.colours.find((c) => c.slug === colourSlug) ?? product.colours[0];
-}
-
-export function sizeSummary(sizes: string[]) {
-  if (!sizes.length) return "";
-  const isNumeric = sizes.every((s) => /^\d+$/.test(s));
-  if (isNumeric) return `${sizes[0]}–${sizes[sizes.length - 1]}`;
-  return sizes.join(" ");
+  return (
+    product.colours.find((c) => c.slug === colourSlug) ?? product.colours[0]
+  );
 }
 
 /** Match products whose category path starts with the given segments. */
-export function productsInPath(segments: string[], brand?: string | null, maxPrice?: number | null) {
+export function productsInPath(
+  segments: string[],
+  brand?: string | null,
+  maxPrice?: number | null,
+) {
   return data.products.filter((p) => {
     const prefixMatch =
-      segments.length === 0 || segments.every((seg, i) => p.category[i] === seg);
+      segments.length === 0 ||
+      segments.every((seg, i) => p.category[i] === seg);
     const containsMatch =
-      segments.length > 1 && segments.slice(1).every((seg) => p.category.includes(seg));
+      segments.length > 1 &&
+      segments.slice(1).every((seg) => p.category.includes(seg));
     const sneakerModelMatch =
-      segments[0] === "sneakers" && !!segments[1] && (p.slug === segments[1] || p.category.includes(segments[1]));
+      segments[0] === "sneakers" &&
+      !!segments[1] &&
+      (p.slug === segments[1] || p.category.includes(segments[1]));
     const pathOk = prefixMatch || containsMatch || sneakerModelMatch;
     if (!pathOk) return false;
     if (brand && p.brand !== brand) return false;
@@ -142,17 +90,29 @@ export function categoryTitle(segments: string[]) {
 
 export function categoryPromise(root: string) {
   const map: Record<string, string> = {
-    shoes: "Monk straps, oxfords, loafers and boots that carry a full workday and the dinner after it.",
+    shoes:
+      "Monk straps, oxfords, loafers and boots that carry a full workday and the dinner after it.",
     sneakers: "Pick your pair. Pick your colour. We’ll hold it.",
-    clothing: "Fit, fabric and what it goes with — written plainly.",
+    clothing: "Fit, fabric and what it goes with - written plainly.",
   };
   return map[root] ?? "Browse the range and order on WhatsApp.";
 }
 
-export const SUBTILES: Record<string, { label: string; href: string; image?: string }[]> = {
+export const SUBTILES: Record<
+  string,
+  { label: string; href: string; image?: string }[]
+> = {
   shoes: [
-    { label: "Officials", href: "/shoes/officials", image: "/catalog/shoes/officials/monk-strap/black.jpeg" },
-    { label: "Casuals", href: "/shoes/casuals", image: "/catalog/shoes/casuals/suede-penny-loafer/brown.jpg" },
+    {
+      label: "Officials",
+      href: "/shoes/officials",
+      image: "/catalog/shoes/officials/monk-strap/black.jpeg",
+    },
+    {
+      label: "Casuals",
+      href: "/shoes/casuals",
+      image: "/catalog/shoes/casuals/suede-penny-loafer/brown.jpg",
+    },
     {
       label: "Sandals & Slides",
       href: "/shoes/sandals-slides",
@@ -162,29 +122,75 @@ export const SUBTILES: Record<string, { label: string; href: string; image?: str
   "shoes/officials": [
     { label: "Monk straps", href: "/shoes/officials/monk-straps" },
     { label: "Loafers", href: "/shoes/officials/loafers" },
-    { label: "Chelsea & boots", href: "/shoes/officials/official-boots" },
+    { label: "Oxford & derby", href: "/shoes/officials/oxford-derby" },
+    { label: "Official boots", href: "/shoes/officials/official-boots" },
   ],
   "shoes/casuals": [
     { label: "Casual loafers", href: "/shoes/casuals/casual-loafers" },
     { label: "Lace-ups", href: "/shoes/casuals/lace-up-casuals" },
-    { label: "Chunky soles", href: "/shoes/casuals/chunky-sole-casuals" },
     { label: "Casual boots", href: "/shoes/casuals/casual-boots" },
   ],
+  "shoes/sandals-slides": [
+    { label: "Buckle slides", href: "/shoes/sandals-slides/buckle-slides" },
+    { label: "Clogs & mules", href: "/shoes/sandals-slides/clogs-mules" },
+  ],
   sneakers: [
-    { label: "Dunk Low", href: "/sneakers/dunk-low", image: "/catalog/sneakers/dunk-low/olive-blue.jpeg" },
-    { label: "Air Force 1", href: "/sneakers/air-force-1", image: "/catalog/sneakers/air-force-1/pink-grey.jpeg" },
-    { label: "Samba", href: "/sneakers/samba", image: "/catalog/sneakers/samba/chocolate.jpeg" },
-    { label: "Air Max", href: "/sneakers/air-max", image: "/catalog/sneakers/air-max/black-purple.jpeg" },
+    {
+      label: "New Balance",
+      href: "/sneakers/shop-by-model/new-balance",
+      image: "/catalog/sneakers/dunk-low/olive-blue.jpeg",
+    },
+    {
+      label: "Dunk Low",
+      href: "/sneakers/shop-by-model/dunk-low",
+      image: "/catalog/sneakers/dunk-low/olive-blue.jpeg",
+    },
+    {
+      label: "Air Force 1",
+      href: "/sneakers/shop-by-model/air-force-1",
+      image: "/catalog/sneakers/air-force-1/pink-grey.jpeg",
+    },
+    {
+      label: "Samba",
+      href: "/sneakers/shop-by-model/samba",
+      image: "/catalog/sneakers/samba/chocolate.jpeg",
+    },
+    {
+      label: "Jordan",
+      href: "/sneakers/shop-by-model/jordan",
+      image: "/catalog/sneakers/dunk-low/olive-blue.jpeg",
+    },
   ],
   clothing: [
-    { label: "Tops", href: "/clothing/tops", image: "/catalog/clothing/tops/raglan-oversized-tee/brown.jpeg" },
-    { label: "Bottoms", href: "/clothing/bottoms", image: "/catalog/clothing/bottoms/textured-trousers/charcoal.jpeg" },
-    { label: "Polos", href: "/clothing/tops/polos", image: "/catalog/clothing/tops/zip-neck-polo/teal.jpeg" },
-    { label: "Long sleeves", href: "/clothing/tops/long-sleeve-shirts", image: "/catalog/clothing/tops/zip-neck-polo/white.jpeg" },
+    {
+      label: "Men's shirts",
+      href: "/clothing/tops/shirts",
+      image: "/catalog/clothing/tops/raglan-oversized-tee/brown.jpeg",
+    },
+    {
+      label: "Men's trousers",
+      href: "/clothing/bottoms/trousers",
+      image: "/catalog/clothing/bottoms/textured-trousers/charcoal.jpeg",
+    },
+    {
+      label: "Polos",
+      href: "/clothing/tops/polos",
+      image: "/catalog/clothing/tops/zip-neck-polo/teal.jpeg",
+    },
+    {
+      label: "Shorts",
+      href: "/clothing/bottoms/casual-shorts",
+      image: "/catalog/clothing/bottoms/textured-trousers/charcoal.jpeg",
+    },
   ],
   "clothing/tops": [
-    { label: "T-shirts", href: "/clothing/tops/t-shirts" },
-    { label: "Polos", href: "/clothing/tops/polos" },
+    { label: "Shirts", href: "/clothing/tops/shirts" },
     { label: "Long-sleeve shirts", href: "/clothing/tops/long-sleeve-shirts" },
+    { label: "Polos", href: "/clothing/tops/polos" },
+    { label: "T-shirts", href: "/clothing/tops/t-shirts" },
+  ],
+  "clothing/bottoms": [
+    { label: "Trousers", href: "/clothing/bottoms/trousers" },
+    { label: "Casual shorts", href: "/clothing/bottoms/casual-shorts" },
   ],
 };

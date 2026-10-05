@@ -19,12 +19,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/clothing/tops",
     "/clothing/tops/t-shirts",
     "/clothing/tops/polos",
+    "/clothing/tops/shirts",
     "/clothing/tops/long-sleeve-shirts",
     "/clothing/bottoms",
     "/clothing/bottoms/trousers",
+    "/clothing/bottoms/casual-shorts",
     "/new-in",
+    "/shop",
+    "/shop/officials",
+    "/shop/casuals",
+    "/shop/other",
     "/sale",
     "/journal",
+    "/sneakers/shop-by-model/new-balance",
+    "/sneakers/shop-by-model/air-max",
     "/delivery",
     "/exchange",
     "/size-guide",
@@ -37,7 +45,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   const products = getAllProducts().flatMap((p) => [
-    { url: `${base}/p/${p.slug}`, changeFrequency: "weekly" as const, priority: 0.8 },
+    {
+      url: `${base}/p/${p.slug}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    },
     ...p.colours.map((c) => ({
       url: `${base}/p/${p.slug}/${c.slug}`,
       changeFrequency: "weekly" as const,

@@ -6,7 +6,8 @@ import { pageLookingMessage, whatsappHref } from "@/lib/whatsapp";
 
 export function WhatsAppFloat() {
   const pathname = usePathname();
-  const label = pathname === "/" ? "the homepage" : pathname.replace(/\//g, " ").trim();
+  const label =
+    pathname === "/" ? "the homepage" : pathname.replace(/\//g, " ").trim();
   const href = whatsappHref(pageLookingMessage(label || "your shop"));
 
   return (

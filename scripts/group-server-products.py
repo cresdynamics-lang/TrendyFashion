@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Group server SKUs into shop products: same brand + style + price = one PDP with colour/types."""
 import json
 import re
 import unicodedata
@@ -41,11 +42,17 @@ COLORS = sorted(
         "chocolate",
         "floral",
         "neon",
+        "peach",
+        "mint",
+        "sky",
+        "slate",
+        "royal",
     ],
     key=len,
     reverse=True,
 )
 
+# Named sneaker models stay their own products (colourways), regardless of price scatter
 MODEL_ALIASES = [
     (re.compile(r"nike\s*sb\s*dunk.*", re.I), "Nike SB Dunk Low"),
     (re.compile(r"nike\s*dunk\s*low.*", re.I), "Nike Dunk Low"),
@@ -55,9 +62,11 @@ MODEL_ALIASES = [
     (re.compile(r"nike\s*air\s*max\s*95.*", re.I), "Nike Air Max 95"),
     (re.compile(r"nike\s*air\s*max\s*270.*", re.I), "Nike Air Max 270"),
     (re.compile(r"nike\s*air\s*jordan\s*1.*", re.I), "Nike Air Jordan 1"),
+    (re.compile(r"air\s*jordan\s*1.*", re.I), "Nike Air Jordan 1"),
     (re.compile(r"new\s*balance\s*9060.*", re.I), "New Balance 9060"),
     (re.compile(r"new\s*balance\s*550.*", re.I), "New Balance 550"),
-    (re.compile(r"zip[- ]?neck\s*polo.*", re.I), "Zip-neck polo"),
+    (re.compile(r"polo\s*ralph\s*lauren.*shorts.*", re.I), "Polo Ralph Lauren Shorts"),
+    (re.compile(r"ralph\s*lauren.*shorts.*", re.I), "Polo Ralph Lauren Shorts"),
 ]
 
 
@@ -67,39 +76,57 @@ def slugify(s: str) -> str:
     return s[:80] or "item"
 
 
-def extract_colors(name: str, tags):
-    found = []
-    for t in tags or []:
-        if isinstance(t, str) and t.lower().startswith("color:"):
-            c = t.split(":", 1)[1].strip()
-            if c and c.lower() not in [x.lower() for x in found]:
-                found.append(c)
+def brand_from(name, sub):
+    sub = (sub or "").lower()
+    if sub == "empire":
+        return "Empire"
+    if sub == "clarks":
+        return "Clarks"
+    if sub in ("john-fosters", "john-foster"):
+        return "John Foster"
+    if sub == "timberland":
+        return "Timberland"
+    if sub == "lacoste":
+        return "Lacoste"
+    brands = [
+        "Polo Ralph Lauren",
+        "Ralph Lauren",
+        "New Balance",
+        "John Foster",
+        "Timberland",
+        "Lacoste",
+        "Clarks",
+        "Adidas",
+        "Jordan",
+        "Empire",
+        "Loewe",
+        "Nike",
+        "Puma",
+        "Vans",
+        "Hugo",
+        "Boss",
+        "Tommy Hilfiger",
+        "Dr Martens",
+        "Dr. Martens",
+        "On",
+    ]
     low = name.lower()
-    for c in COLORS:
-        if re.search(rf"\b{re.escape(c)}\b", low):
-            label = "Grey" if c in ("grey", "gray") else c.title()
-            if label.lower() not in [x.lower() for x in found]:
-                found.append(label)
-    if not found:
-        label = re.sub(
-            r"nike|adidas|sb|dunk|low|air|force|max|samba|sneakers?|shoes?",
-            " ",
-            name,
-            flags=re.I,
-        )
-        label = re.sub(r"\s+", " ", label).strip(" -")
-        found = [label[:40] if label else "Default"]
-    return found
+    for b in brands:
+        if re.search(rf"(?<![a-z]){re.escape(b.lower())}(?![a-z])", low):
+            return b.replace("Dr. Martens", "Dr Martens")
+        if b.lower().replace(" ", "-").replace(".", "") == sub.replace(".", ""):
+            return b
+    return None
 
 
-def canonical_name(name: str) -> str:
-    for rx, canon in MODEL_ALIASES:
-        if rx.match(name.strip()):
-            return canon
-    n = name
-    for c in COLORS:
-        n = re.sub(rf"\b{c}\b", " ", n, flags=re.I)
-    return re.sub(r"\s+", " ", n).strip(" -") or name
+def is_bottoms_shorts(name: str, sub: str) -> bool:
+    nm = name.lower()
+    sub = (sub or "").lower()
+    if sub == "shorts":
+        return True
+    if re.search(r"\bshorts\b", nm):
+        return True
+    return False
 
 
 def map_category(cat, sub, name):
@@ -129,16 +156,16 @@ def map_category(cat, sub, name):
         path = ["shoes", "officials"]
         if "monk" in nm:
             path.append("monk-straps")
-        elif "boot" in nm or sub == "boots":
+        elif sub == "boots" or re.search(r"\bboots?\b", nm):
             path.append("official-boots")
-        elif "loafer" in nm or cat == "loafers":
+        elif "loafer" in nm or "tassel" in nm or cat == "loafers":
             path.append("loafers")
         else:
             path.append("oxford-derby")
         return path
     if cat == "casual":
         path = ["shoes", "casuals"]
-        if "boot" in nm:
+        if re.search(r"\bboots?\b", nm) or "chukka" in nm:
             path.append("casual-boots")
         elif "loafer" in nm:
             path.append("casual-loafers")
@@ -154,21 +181,21 @@ def map_category(cat, sub, name):
         return path
     if cat == "clothing":
         path = ["clothing"]
-        if "polo" in nm or sub == "polo-shirts":
-            path += ["tops", "polos"]
-        elif "hood" in nm or sub == "hoods":
-            path += ["tops", "hoodies"]
-        elif ("short" in nm and "shirt" not in nm) or sub == "shorts":
+        if is_bottoms_shorts(name, sub):
             path += ["bottoms", "casual-shorts"]
         elif any(x in nm for x in ("trouser", "khaki", "chino", "pant")):
             path += ["bottoms", "trousers"]
-        elif "vest" in nm or sub == "vests":
+        elif sub == "hoods" or "hood" in nm:
+            path += ["tops", "hoodies"]
+        elif sub == "vests" or "vest" in nm:
             path += ["tops", "vests"]
-        elif "long sleeve" in nm or "long-sleeve" in nm:
-            path += ["tops", "long-sleeve-shirts"]
-        elif "official" in nm or sub == "official-shirts":
+        elif sub == "polo-shirts" or ("polo" in nm and not is_bottoms_shorts(name, sub)):
+            path += ["tops", "polos"]
+        elif sub == "official-shirts" or ("official" in nm and "shirt" in nm):
             path += ["tops", "official-shirts"]
-        elif "tee" in nm or "t-shirt" in nm:
+        elif "long sleeve" in nm or "long-sleeve" in nm or "long-sleeved" in nm:
+            path += ["tops", "long-sleeve-shirts"]
+        elif "tee" in nm or "t-shirt" in nm or "tshirt" in nm:
             path += ["tops", "t-shirts"]
         else:
             path += ["tops", "shirts"]
@@ -176,62 +203,269 @@ def map_category(cat, sub, name):
     return ["shoes", cat or "other"]
 
 
-def brand_from(name, sub):
-    for b in [
-        "Nike",
-        "Adidas",
-        "Jordan",
-        "New Balance",
-        "Timberland",
-        "Clarks",
-        "Lacoste",
-        "Puma",
-        "Vans",
-        "On",
-        "Empire",
-        "John Foster",
-        "Hugo",
-        "Boss",
-        "Loewe",
-    ]:
-        if b.lower() in name.lower() or b.lower() in (sub or "").lower():
-            return b
-    return None
-
-
 def sizes_for(path):
+    # Shoes / sneakers: EU 39–45
+    if path[0] in ("shoes", "sneakers"):
+        return ["39", "40", "41", "42", "43", "44", "45"]
     if path[0] == "clothing":
-        if "trousers" in path or "shorts" in path:
-            return ["30", "32", "34", "36"]
-        return ["S", "M", "L", "XL", "XXL"]
-    if path[0] == "sneakers":
-        return ["40", "41", "42", "43", "44", "45"]
-    return ["39", "40", "41", "42", "43", "44", "45", "46"]
+        # Trousers & shorts: waist 30–40
+        if "trousers" in path or "shorts" in path or "bottoms" in path:
+            return [str(n) for n in range(30, 41)]
+        # Shirts / tops: S–3XL
+        return ["S", "M", "L", "XL", "XXL", "3XL"]
+    return ["39", "40", "41", "42", "43", "44", "45"]
 
 
+def style_family(name: str, cat: str, sub: str) -> str:
+    """Bucket that, with brand + price, defines one shop product."""
+    nm = name.lower()
+    cat = (cat or "").lower()
+    sub = (sub or "").lower()
+
+    for rx, canon in MODEL_ALIASES:
+        if rx.match(name.strip()):
+            return "model:" + slugify(canon)
+
+    if is_bottoms_shorts(name, sub):
+        return "shorts"
+    if cat == "clothing":
+        if "hood" in nm or sub == "hoods":
+            return "hoodie"
+        if "vest" in nm or sub == "vests":
+            return "vest"
+        if "polo" in nm or sub == "polo-shirts":
+            return "polo"
+        if "tee" in nm or "t-shirt" in nm:
+            return "tee"
+        if "long sleeve" in nm or "long-sleeve" in nm or "long-sleeved" in nm:
+            return "shirt-long"
+        if "cuban" in nm:
+            return "shirt-cuban"
+        if "shirt" in nm or sub in ("shirts", "official-shirts", "casual"):
+            return "shirt"
+        return "clothing-other"
+
+    if "monk" in nm:
+        return "monk-strap"
+    if "loafer" in nm or "tassel" in nm or cat == "loafers":
+        if "woven" in nm or "horsebit" in nm:
+            return "loafer-woven"
+        return "loafer"
+    if re.search(r"\bboots?\b", nm) or sub == "boots" or "chelsea" in nm:
+        if "chukka" in nm or "desert" in nm:
+            return "boot-chukka"
+        return "boot"
+    if "chukka" in nm:
+        return "boot-chukka"
+    if "sandal" in nm or "birken" in nm or cat == "sandals":
+        if "mule" in nm or sub == "mules":
+            return "mule"
+        return "sandal"
+    # Dress lace-ups share one family so same brand + price = one PDP
+    if "derby" in nm or "oxford" in nm or "brogue" in nm:
+        return "dress-shoe"
+    if cat == "sneakers" or "sneaker" in nm:
+        return "sneaker-other"
+    if cat == "casual":
+        return "casual-shoe"
+    if cat == "officials":
+        return "dress-shoe"
+    return "other"
+
+
+def family_display_name(brand, family: str, sample_name: str) -> str:
+    if family.startswith("model:"):
+        for rx, canon in MODEL_ALIASES:
+            if rx.match(sample_name.strip()):
+                return canon
+        return sample_name
+    nice = {
+        "loafer": "Patent Leather Loafer",
+        "loafer-woven": "Woven Loafer",
+        "monk-strap": "Monk Strap Shoe",
+        "boot": "Official Boots",
+        "boot-chukka": "Chukka Boot",
+        "dress-shoe": "Official Shoe",
+        "sandal": "Buckle Sandal",
+        "mule": "Mule",
+        "shorts": "Shorts",
+        "polo": "Polo Shirt",
+        "shirt-long": "Long-Sleeve Shirt",
+        "shirt-cuban": "Cuban Collar Shirt",
+        "shirt": "Shirt",
+        "hoodie": "Hoodie",
+        "vest": "Vest",
+        "tee": "T-Shirt",
+        "sneaker-other": "Sneaker",
+        "casual-shoe": "Casual Shoe",
+    }
+    label = nice.get(family, family.replace("-", " ").title())
+    # Brand-specific overrides
+    if brand == "Empire" and family == "loafer":
+        return "Empire Patent Leather Loafer"
+    if brand == "Empire" and family == "monk-strap":
+        return "Empire Monk Strap Shoe"
+    if brand == "Empire" and family == "dress-shoe":
+        return "Empire Official Shoe"
+    if brand == "Clarks" and family == "boot":
+        return "Clarks Official Boots"
+    if brand == "Clarks" and family == "dress-shoe":
+        return "Clarks Official Shoe"
+    if brand == "Clarks" and family == "sandal":
+        return "Clarks Buckle Sandal"
+    if brand == "Timberland" and family == "boot":
+        return "Timberland Leather Boot"
+    if brand == "Timberland" and family == "boot-chukka":
+        return "Timberland Chukka Boot"
+    if brand == "Timberland" and family == "loafer-woven":
+        return "Timberland Woven Loafer"
+    if brand == "Timberland" and family == "loafer":
+        return "Timberland Loafer"
+    if brand == "Polo Ralph Lauren" and family == "shorts":
+        return "Polo Ralph Lauren Shorts"
+    if brand == "John Foster" and family == "dress-shoe":
+        return "John Foster Official Shoe"
+    if brand:
+        return f"{brand} {label}"
+    # Never ship a product literally named "Other"
+    if family in ("other", "clothing-other", "sneaker-other", "casual-shoe"):
+        # Fall back to a cleaned sample name
+        n = sample_name
+        for c in COLORS:
+            n = re.sub(rf"\b{c}\b", " ", n, flags=re.I)
+        n = re.sub(r"\s+", " ", n).strip(" -")
+        return n or "Untitled"
+    return label
+
+
+def variant_label(name: str, tags) -> str:
+    """Colour / type chip for one SKU inside a grouped product."""
+    low = name.lower()
+    parts = []
+
+    # Type nuances first
+    if "tassel" in low:
+        parts.append("Tassel")
+    if "patterned" in low:
+        parts.append("Patterned")
+    if "linen" in low and "short" in low:
+        parts.append("Linen")
+    if re.search(r"\bdouble\b", low) and "monk" in low:
+        parts.append("Double")
+    if "platform" in low:
+        parts.append("Platform")
+    if "horsebit" in low:
+        parts.append("Horsebit")
+    if "woven" in low:
+        parts.append("Woven")
+    if "casual" in low and re.search(r"\bshorts\b", low) and not any(
+        re.search(rf"\b{c}\b", low) for c in COLORS
+    ):
+        parts.append("Casual")
+
+    # Colours from name
+    colours = []
+    if re.search(r"\bburgundy\b", low):
+        colours.append("Burgundy")
+    if re.search(r"\boff[- ]?white\b", low):
+        colours.append("Off-White")
+    # two-tone "black and blue"
+    m = re.search(r"\b(black|brown|blue|navy|white|tan|grey|gray)\s+and\s+(black|brown|blue|navy|white|tan|grey|gray)\b", low)
+    if m:
+        a, b = m.group(1).title(), m.group(2).title()
+        if a in ("Grey", "Gray"):
+            a = "Grey"
+        if b in ("Grey", "Gray"):
+            b = "Grey"
+        colours.append(f"{a} & {b}")
+    else:
+        for c in COLORS:
+            if re.search(rf"\b{re.escape(c)}\b", low):
+                label = "Grey" if c in ("grey", "gray") else c.title()
+                if label not in colours:
+                    colours.append(label)
+                break
+
+    if not colours:
+        for t in tags or []:
+            if isinstance(t, str) and t.lower().startswith("color:"):
+                colours.append(t.split(":", 1)[1].strip().title())
+                break
+
+    if colours:
+        parts.append(colours[0])
+    if not parts:
+        # last resort: trim brand/style words
+        label = re.sub(
+            r"empire|clarks|timberland|polo|ralph|lauren|john|foster|official|"
+            r"patent|leather|loafer|loafers|shoes?|boots?|monk|strap|shorts|casual",
+            " ",
+            name,
+            flags=re.I,
+        )
+        label = re.sub(r"\s+", " ", label).strip(" -")
+        parts.append(label[:40] if label else "Default")
+
+    return " ".join(parts)
+
+
+def pick_description(items) -> str:
+    """One description for the group — longest useful text."""
+    best = ""
+    for it in items:
+        d = (it.get("description") or "").strip()
+        if len(d) > len(best):
+            best = d
+    # Soft trim for storefront
+    if len(best) > 600:
+        best = best[:597].rsplit(" ", 1)[0] + "…"
+    return best
+
+
+# --- group: brand + style family + price (+ db category) ---
 groups = OrderedDict()
 for p in raw:
-    display = canonical_name(p["name"])
-    key = ((p["category"] or "").lower(), display.lower())
-    groups.setdefault(key, []).append((display, p))
+    brand = brand_from(p["name"], p.get("subcategory"))
+    fam = style_family(p["name"], p.get("category") or "", p.get("subcategory") or "")
+    price = float(p.get("price") or 0)
+    price_key = int(price) if price == int(price) else price
+    cat = (p.get("category") or "").lower()
+    # Never use DB subcategory as a "brand" (shirts vs casual was splitting the same tee)
+    brand_key = brand or "unbranded"
+    # Named models group by model only (colourways across slight price noise)
+    if fam.startswith("model:"):
+        key = ("model", fam)
+    else:
+        # Brand + style + price — ignore DB category so loafers/casual don't split the same shoe
+        key = (brand_key, fam, price_key)
+    groups.setdefault(key, []).append(p)
 
 products = []
-for (cat, _dlow), pairs in groups.items():
-    display = pairs[0][0]
-    items = [p for _, p in pairs]
-    slug = slugify(display)
-    existing = {x["slug"] for x in products}
-    base = slug
-    n = 2
-    while slug in existing:
-        slug = f"{base}-{n}"
-        n += 1
-    path = map_category(cat, items[0].get("subcategory"), items[0]["name"])
-    colours = []
+for key, items in groups.items():
+    brand = brand_from(items[0]["name"], items[0].get("subcategory"))
+    fam = style_family(items[0]["name"], items[0].get("category") or "", items[0].get("subcategory") or "")
+    display = family_display_name(brand, fam, items[0]["name"])
+    # Drop junk untitled / Other groups
+    if display.strip().lower() in ("other", "untitled", "item", "default"):
+        continue
+    # Prefer a name that appears most often after colour strip for non-brand families
+    path = map_category(items[0].get("category"), items[0].get("subcategory"), items[0]["name"])
+    # If mixed paths in group, prefer majority path
+    path_votes = {}
     for it in items:
-        cols = extract_colors(it["name"], it.get("tags"))
-        label = cols[0]
-        cslug = slugify(label) or "default"
+        pt = tuple(map_category(it.get("category"), it.get("subcategory"), it["name"]))
+        path_votes[pt] = path_votes.get(pt, 0) + 1
+    path = list(max(path_votes.items(), key=lambda x: x[1])[0])
+
+    sizes = sizes_for(path)
+    colours = []
+    label_counts = {}
+    for it in items:
+        label = variant_label(it["name"], it.get("tags"))
+        label_counts[label.lower()] = label_counts.get(label.lower(), 0) + 1
+        n = label_counts[label.lower()]
+        display_label = label if n == 1 else f"{label} {n}"
+        cslug = slugify(display_label) or "default"
         taken = {c["slug"] for c in colours}
         cs = cslug
         k = 2
@@ -242,39 +476,65 @@ for (cat, _dlow), pairs in groups.items():
         colours.append(
             {
                 "slug": cs,
-                "label": label,
+                "label": display_label,
                 "image": it["image"],
+                "sizes": list(sizes),
                 "sourceId": it.get("id"),
                 "sourceName": it["name"],
             }
         )
+
+    slug = slugify(display)
+    existing = {x["slug"] for x in products}
+    base = slug
+    n = 2
+    while slug in existing:
+        # disambiguate by price when needed
+        price = float(items[0].get("price") or 0)
+        slug = f"{base}-{int(price)}" if n == 2 else f"{base}-{n}"
+        n += 1
+
     price = float(items[0]["price"] or 0)
     tags0 = items[0].get("tags") or []
+    badge = "Sale" if "Sale" in tags0 else ("New" if items[0].get("featured") else None)
     products.append(
         {
             "slug": slug,
             "name": display,
             "category": path,
-            "brand": brand_from(items[0]["name"], items[0].get("subcategory")),
-            "sizes": sizes_for(path),
+            "brand": brand,
+            "sizes": sizes,
             "priceKes": int(price) if price == int(price) else price,
-            "badge": "Sale" if "Sale" in tags0 else ("New" if items[0].get("featured") else None),
+            "badge": badge,
+            "description": pick_description(items),
             "colours": colours,
-            "description": (items[0].get("description") or "")[:500],
         }
     )
 
 print("grouped", len(products), "multi", sum(1 for p in products if len(p["colours"]) > 1))
-for needle in ["Nike SB Dunk Low", "Nike Dunk Low", "Adidas Samba", "Nike Air Force 1"]:
+for needle in [
+    "Empire Patent Leather Loafer",
+    "Empire Monk Strap Shoe",
+    "Clarks Official Boots",
+    "Clarks Official Shoe",
+    "Timberland Chukka Boot",
+    "Timberland Leather Boot",
+    "Polo Ralph Lauren Shorts",
+    "Nike SB Dunk Low",
+]:
     hits = [p for p in products if p["name"] == needle]
-    print(needle, "colours", len(hits[0]["colours"]) if hits else 0)
+    if hits:
+        h = hits[0]
+        print(f"  {needle}: {len(h['colours'])} types @ {h['priceKes']} →", [c["label"] for c in h["colours"]])
+    else:
+        print(f"  {needle}: (not found)")
 
 out = {
     "shop": "Trendy Fashion Zone",
     "whatsapp": "0790314739",
     "whatsapp_e164": "+254790314739",
     "payment": "Pesapal",
-    "source": "server-db-grouped-v2",
+    "source": "server-db-grouped-v3-brand-style-price",
     "kept_images": sum(len(p["colours"]) for p in products),
     "products": products,
 }

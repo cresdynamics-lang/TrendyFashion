@@ -9,11 +9,13 @@ export default function ContactPage() {
       <div className="container max-w-2xl">
         <h1 className="heading text-4xl">Contact</h1>
         <p className="mt-4 text-slate-600">
-          Reach us when you need fit, stock or delivery answers — on the product, in the cart, or here.
+          Reach us when you need fit, stock or delivery answers - on the
+          product, in the cart, or here.
         </p>
         <div className="mt-8 space-y-3 text-slate-700">
           <p>
-            <strong className="text-navy">WhatsApp / Call:</strong> {SITE.whatsapp}
+            <strong className="text-navy">WhatsApp / Call:</strong>{" "}
+            {SITE.whatsapp}
           </p>
           <p>
             <strong className="text-navy">Visit:</strong> {SITE.address}
